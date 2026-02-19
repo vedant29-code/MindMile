@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVARA — Your Mental Wellness Partner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0a0f1e;
+      --navy-mid: #111827;
+      --navy-light: #1a2540;
+      --teal: #0d9488;
+      --teal-light: #14b8a6;
+      --teal-glow: #2dd4bf;
+      --amber: #f59e0b;
+      --amber-light: #fbbf24;
+      --amber-glow: #fcd34d;
+      --rose: #f43f5e;
+      --violet: #8b5cf6;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.08);
+      --glass-hover: rgba(255,255,255,0.08);
+      --text-primary: #f0f4ff;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --mood-color: #0d9488;
+    }
+
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+
+    body {
+      font-family: 'Lexend', sans-serif;
+      background: var(--navy);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom Cursor */
+    .cursor {
+      width: 12px; height: 12px;
+      background: var(--teal-glow);
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background 0.3s ease;
+      mix-blend-mode: screen;
+    }
+    .cursor-ring {
+      width: 40px; height: 40px;
+      border: 1.5px solid rgba(45,212,191,0.4);
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease, width 0.3s ease, height 0.3s ease;
+    }
+    body:hover .cursor { opacity: 1; }
+
+    /* Canvas BG */
+    #bg-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+
+    /* Grain overlay */
+    .grain {
+      position: fixed; inset: 0;
+      z-index: 1; pointer-events: none; opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 20px 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(20px);
+      background: rgba(10,15,30,0.6);
+      border-bottom: 1px solid var(--glass-border);
+      transition: all 0.3s ease;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;
+      color: var(--text-primary); text-decoration: none;
+    }
+    .logo-orb {
+      width: 32px; height: 32px;
+      background: radial-gradient(circle at 35% 35%, var(--teal-glow), var(--teal));
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(45,212,191,0.5);
+      animation: pulse-orb 3s ease-in-out infinite;
+    }
+    @keyframes pulse-orb {
+      0%,100% { box-shadow: 0 0 20px rgba(45,212,191,0.5); transform: scale(1); }
+      50% { box-shadow: 0 0 35px rgba(45,212,191,0.8); transform: scale(1.05); }
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 0.875rem; font-weight: 400; letter-spacing: 0.3px;
+      transition: color 0.3s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 1px; background: var(--teal-glow);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-links a:hover::after { width: 100%; }
+    .btn-nav {
+      padding: 10px 22px;
+      background: var(--teal);
+      color: var(--text-primary); text-decoration: none;
+      border-radius: 50px; font-size: 0.875rem; font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 20px rgba(13,148,136,0.3);
+    }
+    .btn-nav:hover {
+      background: var(--teal-glow); transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(45,212,191,0.5);
+    }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 5px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--text-secondary); border-radius: 2px; transition: all 0.3s; }
+
+    /* HERO SECTION */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      position: relative; z-index: 10;
+      padding: 100px 5% 60px;
+    }
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: rgba(13,148,136,0.12);
+      border: 1px solid rgba(13,148,136,0.3);
+      border-radius: 50px; font-size: 0.78rem; font-weight: 500;
+      color: var(--teal-glow); letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 28px;
+      opacity: 0; transform: translateY(20px);
+      animation: fadeUp 0.8s ease 0.2s forwards;
+    }
+    .badge-dot { width: 6px; height: 6px; background: var(--teal-glow); border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .hero-headline {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      line-height: 1.1; font-weight: 400; letter-spacing: -1px;
+      margin-bottom: 24px;
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUp 0.9s ease 0.4s forwards;
+    }
+    .hero-headline em { font-style: italic; color: var(--teal-glow); }
+    .hero-headline .stat-word {
+      display: inline-block;
+      color: var(--rose);
+      position: relative;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      color: var(--text-secondary); font-weight: 300; line-height: 1.8;
+      max-width: 620px; margin: 0 auto 40px;
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUp 0.9s ease 0.6s forwards;
+    }
+    .hero-cta {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; flex-wrap: wrap;
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUp 0.9s ease 0.8s forwards;
+    }
+    .btn-primary {
+      padding: 16px 36px;
+      background: linear-gradient(135deg, var(--teal), var(--teal-light));
+      color: #fff; border: none; border-radius: 50px;
+      font-family: 'Lexend', sans-serif; font-size: 1rem; font-weight: 500;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 30px rgba(13,148,136,0.4);
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--teal-light), var(--teal-glow));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-primary:hover::before { opacity: 1; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 0 50px rgba(45,212,191,0.5); }
+    .btn-primary span { position: relative; z-index: 1; }
+    .btn-secondary {
+      padding: 16px 36px;
+      background: transparent;
+      color: var(--text-primary); border: 1px solid var(--glass-border);
+      border-radius: 50px; font-family: 'Lexend', sans-serif;
+      font-size: 1rem; font-weight: 400; cursor: pointer;
+      transition: all 0.3s ease; text-decoration: none;
+      backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover { border-color: var(--teal); background: rgba(13,148,136,0.1); transform: translateY(-2px); }
+
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px;
+      margin-top: 64px; padding-top: 40px;
+      border-top: 1px solid var(--glass-border);
+      opacity: 0; animation: fadeUp 0.9s ease 1.1s forwards;
+    }
+    .stat-item { text-align: center; }
+    .stat-number {
+      font-family: 'DM Serif Display', serif; font-size: 2rem;
+      color: var(--teal-glow); display: block; margin-bottom: 4px;
+    }
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* SCROLL INDICATOR */
+    .scroll-hint {
+      position: absolute; bottom: 40px; right: 5%;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: var(--text-muted); font-size: 0.7rem; letter-spacing: 2px;
+      text-transform: uppercase; z-index: 10;
+      opacity: 0; animation: fadeUp 1s ease 1.4s forwards;
+    }
+    .scroll-line {
+      width: 1px; height: 50px;
+      background: linear-gradient(to bottom, var(--teal-glow), transparent);
+      animation: scrollDown 2s ease-in-out infinite;
+    }
+    @keyframes scrollDown {
+      0% { transform: scaleY(0); transform-origin: top; }
+      50% { transform: scaleY(1); transform-origin: top; }
+      51% { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+
+    /* SECTION BASICS */
+    section {
+      position: relative; z-index: 10;
+      padding: 100px 5%;
+    }
+    .section-label {
+      font-size: 0.72rem; font-weight: 500; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--teal-glow);
+      margin-bottom: 16px; display: block;
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 400; line-height: 1.15; letter-spacing: -0.5px;
+      margin-bottom: 20px;
+    }
+    .section-title em { color: var(--teal-glow); font-style: italic; }
+    .section-subtitle {
+      font-size: 1.05rem; color: var(--text-secondary);
+      font-weight: 300; line-height: 1.8; max-width: 560px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* PROBLEM SECTION */
+    .problem-section {
+      background: linear-gradient(180deg, var(--navy) 0%, rgba(20,10,30,0.95) 100%);
+    }
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center; margin-top: 60px;
+    }
+    .problem-visual {
+      position: relative;
+    }
+    .big-stat {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(4rem, 10vw, 8rem); font-weight: 400;
+      color: var(--rose); line-height: 1; letter-spacing: -3px;
+      position: relative;
+      text-shadow: 0 0 60px rgba(244,63,94,0.4);
+    }
+    .big-stat-label {
+      font-size: 1.1rem; font-weight: 300; color: var(--text-secondary);
+      line-height: 1.6; margin-top: 16px;
+    }
+    .big-stat-label strong { color: var(--text-primary); font-weight: 500; }
+    .problem-cards {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .problem-card {
+      padding: 20px 24px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      display: flex; align-items: flex-start; gap: 16px;
+      transition: all 0.3s ease;
+      opacity: 0; transform: translateX(30px);
+    }
+    .problem-card:hover { background: var(--glass-hover); border-color: rgba(244,63,94,0.3); transform: translateX(0) translateY(-2px); }
+    .problem-icon {
+      width: 42px; height: 42px; min-width: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .problem-icon.red { background: rgba(244,63,94,0.12); }
+    .problem-icon.amber { background: rgba(245,158,11,0.12); }
+    .problem-icon.violet { background: rgba(139,92,246,0.12); }
+    .problem-card h4 { font-size: 0.95rem; font-weight: 500; margin-bottom: 4px; }
+    .problem-card p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* MOOD SPHERE */
+    .mood-section { background: transparent; }
+    .mood-center { text-align: center; }
+    .mood-container {
+      display: flex; flex-direction: column; align-items: center;
+      margin-top: 60px; gap: 40px;
+    }
+    .mood-sphere-wrap {
+      position: relative;
+      width: 200px; height: 200px;
+    }
+    .mood-sphere {
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%,
+        rgba(45,212,191,0.9),
+        var(--mood-color) 40%,
+        rgba(10,15,30,0.8));
+      box-shadow:
+        0 0 40px rgba(45,212,191,0.4),
+        0 0 80px rgba(45,212,191,0.2),
+        inset 0 0 40px rgba(45,212,191,0.1);
+      cursor: pointer;
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: float-sphere 4s ease-in-out infinite;
+      position: relative;
+    }
+    .mood-sphere::before {
+      content: '';
+      position: absolute; top: 15%; left: 20%;
+      width: 30%; height: 20%;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      transform: rotate(-30deg);
+      filter: blur(4px);
+    }
+    .mood-sphere::after {
+      content: '';
+      position: absolute; inset: -4px;
+      border-radius: 50%;
+      border: 1px solid rgba(45,212,191,0.2);
+      animation: ring-pulse 3s ease-in-out infinite;
+    }
+    @keyframes ring-pulse {
+      0%,100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.1); opacity: 0.2; }
+    }
+    .mood-sphere-ring {
+      position: absolute; inset: -20px;
+      border-radius: 50%;
+      border: 1px solid rgba(45,212,191,0.1);
+      animation: ring-pulse2 4s ease-in-out infinite 0.5s;
+    }
+    @keyframes ring-pulse2 {
+      0%,100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 0.1; }
+    }
+    @keyframes float-sphere {
+      0%,100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-12px) scale(1.02); }
+    }
+    .mood-labels {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    }
+    .mood-pill {
+      padding: 10px 20px;
+      border-radius: 50px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      color: #ffffff;
+      font-size: 0.85rem; font-weight: 400; cursor: pointer;
+      transition: all 0.4s ease;
+      backdrop-filter: blur(10px);
+    }
+    .mood-pill:hover { transform: scale(1.05); }
+    .mood-pill.active { box-shadow: 0 0 20px rgba(45,212,191,0.4); }
+    .mood-message {
+      padding: 20px 32px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px; backdrop-filter: blur(10px);
+      max-width: 500px; text-align: center;
+      font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7;
+      min-height: 80px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.5s ease;
+    }
+    .mood-message strong { color: var(--text-primary); }
+
+    /* FEATURES SECTION */
+    .features-section { background: linear-gradient(180deg, transparent, rgba(10,15,30,0.5)); }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-top: 60px;
+    }
+    .feature-card {
+      padding: 32px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px; backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
+      position: relative; overflow: hidden;
+      opacity: 0; transform: translateY(30px);
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal-glow), transparent);
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .feature-card:hover { transform: translateY(-6px); background: var(--glass-hover); border-color: rgba(13,148,136,0.3); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon-wrap {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px;
+    }
+    .f-teal { background: rgba(13,148,136,0.15); box-shadow: 0 0 20px rgba(13,148,136,0.1); }
+    .f-amber { background: rgba(245,158,11,0.15); box-shadow: 0 0 20px rgba(245,158,11,0.1); }
+    .f-violet { background: rgba(139,92,246,0.15); box-shadow: 0 0 20px rgba(139,92,246,0.1); }
+    .f-rose { background: rgba(244,63,94,0.15); box-shadow: 0 0 20px rgba(244,63,94,0.1); }
+    .f-blue { background: rgba(59,130,246,0.15); box-shadow: 0 0 20px rgba(59,130,246,0.1); }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.2px; }
+    .feature-card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; }
+    .feature-tag {
+      display: inline-block; margin-top: 16px;
+      padding: 4px 12px; border-radius: 50px;
+      font-size: 0.7rem; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .tag-teal { background: rgba(13,148,136,0.15); color: var(--teal-glow); }
+    .tag-amber { background: rgba(245,158,11,0.15); color: var(--amber-light); }
+    .tag-violet { background: rgba(139,92,246,0.15); color: #a78bfa; }
+
+    /* BURNOUT CALCULATOR */
+    .burnout-section { background: transparent; }
+    .burnout-card {
+      max-width: 720px; margin: 60px auto 0;
+      padding: 48px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 60px rgba(13,148,136,0.08);
+    }
+    .calc-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; }
+    .calc-sub { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 40px; line-height: 1.6; }
+    .slider-row {
+      margin-bottom: 32px;
+    }
+    .slider-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .slider-label { font-size: 0.9rem; font-weight: 500; }
+    .slider-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; font-weight: 500;
+      color: var(--teal-glow);
+      min-width: 50px; text-align: right;
+    }
+    input[type="range"] {
+      width: 100%; height: 6px;
+      -webkit-appearance: none; appearance: none;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px; outline: none; cursor: pointer;
+      transition: background 0.3s;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--teal-glow);
+      box-shadow: 0 0 15px rgba(45,212,191,0.5);
+      cursor: pointer; transition: box-shadow 0.3s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 25px rgba(45,212,191,0.8); }
+    .score-display {
+      margin-top: 36px; padding: 28px;
+      border-radius: 20px; text-align: center;
+      background: linear-gradient(135deg, rgba(13,148,136,0.12), rgba(45,212,191,0.05));
+      border: 1px solid rgba(13,148,136,0.2);
+      transition: all 0.6s ease;
+    }
+    .score-label { font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .score-number {
+      font-family: 'DM Serif Display', serif; font-size: 4rem;
+      font-weight: 400; line-height: 1; margin-bottom: 12px;
+      transition: color 0.5s ease;
+    }
+    .score-text { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+    .score-bar-wrap {
+      width: 100%; height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px; overflow: hidden; margin: 20px 0 12px;
+    }
+    .score-bar {
+      height: 100%; border-radius: 4px;
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s;
+    }
+
+    /* PEER CIRCLE */
+    .peer-section { background: linear-gradient(180deg, transparent, rgba(10,15,30,0.3)); }
+    .peer-carousel {
+      position: relative; overflow: hidden;
+      margin-top: 60px; padding: 20px 0;
+    }
+    .peer-track {
+      display: flex; gap: 24px;
+      animation: scroll-cards 30s linear infinite;
+    }
+    .peer-track:hover { animation-play-state: paused; }
+    @keyframes scroll-cards {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .peer-card {
+      min-width: 320px; padding: 28px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px; backdrop-filter: blur(10px);
+      flex-shrink: 0; transition: all 0.3s ease;
+    }
+    .peer-card:hover { transform: translateY(-6px); background: var(--glass-hover); border-color: rgba(13,148,136,0.25); }
+    .peer-quote { font-size: 0.9rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 20px; font-style: italic; }
+    .peer-quote::before { content: '\201C'; font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--teal); line-height: 0; vertical-align: -0.4em; margin-right: 4px; }
+    .peer-meta { display: flex; align-items: center; gap: 12px; }
+    .peer-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 600;
+    }
+    .peer-info { }
+    .peer-name { font-size: 0.85rem; font-weight: 500; }
+    .peer-exam { font-size: 0.75rem; color: var(--text-muted); }
+    .peer-stars { color: var(--amber); font-size: 0.7rem; letter-spacing: 2px; }
+
+    /* PRICING */
+    .pricing-section { background: transparent; }
+    .pricing-toggle {
+      display: inline-flex; align-items: center;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 50px; padding: 6px; margin: 40px auto 0;
+      gap: 4px;
+    }
+    .toggle-btn {
+      padding: 10px 28px; border-radius: 50px;
+      font-family: 'Lexend', sans-serif; font-size: 0.88rem; font-weight: 400;
+      background: transparent; color: var(--text-secondary);
+      border: none; cursor: pointer; transition: all 0.3s ease;
+    }
+    .toggle-btn.active {
+      background: var(--teal); color: #fff; font-weight: 500;
+      box-shadow: 0 0 20px rgba(13,148,136,0.4);
+    }
+    .pricing-center { text-align: center; }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-top: 40px;
+    }
+    .price-card {
+      padding: 36px 30px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px; backdrop-filter: blur(10px);
+      position: relative; transition: all 0.4s ease;
+      opacity: 0; transform: translateY(30px);
+    }
+    .price-card.featured {
+      border-color: rgba(13,148,136,0.4);
+      background: rgba(13,148,136,0.07);
+      box-shadow: 0 0 50px rgba(13,148,136,0.12);
+    }
+    .price-card:hover { transform: translateY(-6px); border-color: rgba(13,148,136,0.3); }
+    .price-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      padding: 4px 16px; background: var(--teal); border-radius: 50px;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;
+    }
+    .price-tier { font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .price-name { font-size: 1.25rem; font-weight: 600; margin-bottom: 24px; }
+    .price-amount {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.8rem; font-weight: 400; line-height: 1;
+      margin-bottom: 6px; display: flex; align-items: flex-start; gap: 6px;
+    }
+    .price-currency { font-size: 1.2rem; margin-top: 8px; color: var(--text-secondary); }
+    .price-period { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 28px; }
+    .price-features { list-style: none; margin-bottom: 32px; }
+    .price-features li {
+      padding: 8px 0; font-size: 0.88rem; color: var(--text-secondary);
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .price-features li::before { content: '✓'; color: var(--teal-glow); font-weight: 600; font-size: 0.8rem; }
+    .price-features li.muted { opacity: 0.4; }
+    .price-features li.muted::before { content: '—'; color: var(--text-muted); }
+    .btn-price {
+      width: 100%; padding: 14px;
+      border-radius: 50px; font-family: 'Lexend', sans-serif;
+      font-size: 0.9rem; font-weight: 500; cursor: pointer;
+      transition: all 0.3s ease; border: none;
+    }
+    .btn-price-outline {
+      background: transparent; color: var(--teal-glow);
+      border: 1px solid rgba(13,148,136,0.4);
+    }
+    .btn-price-outline:hover { background: rgba(13,148,136,0.1); transform: translateY(-2px); }
+    .btn-price-filled {
+      background: linear-gradient(135deg, var(--teal), var(--teal-light));
+      color: #fff; box-shadow: 0 0 25px rgba(13,148,136,0.35);
+    }
+    .btn-price-filled:hover { box-shadow: 0 0 40px rgba(13,148,136,0.55); transform: translateY(-2px); }
+
+    /* INSTITUTE DASHBOARD PREVIEW */
+    .dashboard-section { background: transparent; }
+    .dashboard-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center; margin-top: 60px;
+    }
+    .dash-preview {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px; padding: 28px;
+      box-shadow: 0 0 80px rgba(13,148,136,0.08);
+      overflow: hidden;
+    }
+    .dash-header { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+    .dash-dots { display: flex; gap: 6px; }
+    .dash-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dash-title { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; }
+    .dash-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .dash-metric {
+      padding: 16px; background: var(--glass);
+      border: 1px solid var(--glass-border); border-radius: 14px;
+    }
+    .dash-metric-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .dash-metric-value { font-family: 'DM Serif Display', serif; font-size: 1.8rem; }
+    .dash-metric-change { font-size: 0.72rem; margin-top: 4px; }
+    .change-up { color: #4ade80; }
+    .change-down { color: var(--rose); }
+    .dash-chart { margin-top: 4px; }
+    .dash-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+    .dash-bar {
+      flex: 1; border-radius: 4px 4px 0 0;
+      background: linear-gradient(to top, var(--teal), var(--teal-glow));
+      opacity: 0.7; transition: opacity 0.3s;
+    }
+    .dash-bar:hover { opacity: 1; }
+    .alert-row {
+      margin-top: 16px; padding: 12px 16px;
+      background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);
+      border-radius: 10px; display: flex; align-items: center; gap: 10px;
+    }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); animation: blink 2s ease-in-out infinite; flex-shrink: 0; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .alert-text { font-size: 0.78rem; color: #fca5a5; line-height: 1.4; }
+    .dashboard-points { display: flex; flex-direction: column; gap: 24px; }
+    .dash-point { display: flex; align-items: flex-start; gap: 16px; }
+    .dash-point-icon {
+      width: 44px; height: 44px; min-width: 44px;
+      background: rgba(13,148,136,0.12); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .dash-point h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .dash-point p { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* IMPACT */
+    .impact-section { background: linear-gradient(180deg, transparent, rgba(10,15,30,0.5)); }
+    .impact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 60px; }
+    .impact-card {
+      padding: 32px 24px; text-align: center;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 24px; backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
+      opacity: 0; transform: translateY(20px);
+    }
+    .impact-card:hover { transform: translateY(-6px); border-color: rgba(13,148,136,0.3); }
+    .impact-number {
+      font-family: 'DM Serif Display', serif; font-size: 2.4rem;
+      color: var(--teal-glow); margin-bottom: 8px;
+    }
+    .impact-label { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+    .sdg-badges { display: flex; justify-content: center; gap: 8px; margin-top: 48px; flex-wrap: wrap; }
+    .sdg-badge {
+      padding: 8px 20px; border-radius: 50px;
+      font-size: 0.75rem; font-weight: 500; letter-spacing: 0.5px;
+    }
+    .sdg-1 { background: rgba(13,148,136,0.15); color: var(--teal-glow); border: 1px solid rgba(13,148,136,0.25); }
+    .sdg-2 { background: rgba(245,158,11,0.15); color: var(--amber-light); border: 1px solid rgba(245,158,11,0.25); }
+    .sdg-3 { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+
+    /* CTA FINAL */
+    .final-cta {
+      text-align: center; padding: 120px 5%;
+      background: linear-gradient(180deg, transparent, rgba(13,148,136,0.05), transparent);
+    }
+    .final-cta-quote {
+      font-family: 'DM Serif Display', serif; font-size: clamp(1.5rem, 3vw, 2.4rem);
+      font-weight: 400; font-style: italic; line-height: 1.5;
+      color: var(--text-secondary); max-width: 700px; margin: 0 auto 48px;
+    }
+    .final-cta-quote strong { color: var(--text-primary); font-style: normal; }
+
+    /* FOOTER */
+    footer {
+      padding: 40px 5%;
+      border-top: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(10,15,30,0.8); backdrop-filter: blur(20px);
+      position: relative; z-index: 10;
+    }
+    .footer-logo { font-size: 1.1rem; font-weight: 600; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+    .footer-links a:hover { color: var(--text-secondary); }
+    .footer-right { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: 1fr 1fr; }
+      .impact-grid { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .problem-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 16px 5%; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .features-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .impact-grid { grid-template-columns: 1fr 1fr; }
+      .hero-stats { flex-direction: column; align-items: center; gap: 24px; }
+      .burnout-card { padding: 28px 20px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+      .impact-grid { grid-template-columns: 1fr 1fr; }
+      .hero-cta { flex-direction: column; align-items: center; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+    }
+
+    /* Mobile nav drawer */
+    .mobile-nav {
+      position: fixed; top: 0; right: 0; width: 280px; height: 100vh;
+      background: rgba(10,15,30,0.95); backdrop-filter: blur(30px);
+      border-left: 1px solid var(--glass-border);
+      z-index: 10000; padding: 80px 32px 40px;
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+      overflow-y: auto;
+    }
+    .mobile-nav.open { transform: translateX(0); }
+    .mobile-nav ul { list-style: none; display: flex; flex-direction: column; gap: 24px; margin-top: 20px; }
+    .mobile-nav a { color: var(--text-secondary); text-decoration: none; font-size: 1.1rem; transition: color 0.3s; display: block; }
+    .mobile-nav a:hover { color: var(--text-primary); }
+    .mobile-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 9999; display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .mobile-overlay.show { display: block; opacity: 1; }
+    .mobile-close {
+      position: absolute; top: 20px; right: 20px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-primary); font-size: 1.8rem;
+      z-index: 10001; padding: 10px;
+      transition: color 0.3s, transform 0.3s;
+    }
+    .mobile-close:hover { color: var(--rose); transform: scale(1.1); }
+
+    /* Divider */
+    .section-divider {
+      width: 60px; height: 2px;
+      background: linear-gradient(90deg, var(--teal-glow), transparent);
+      margin: 0 auto 40px; border-radius: 2px;
+    }
+
+    /* Scroll reveal utility */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.in-view { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* Floating particles for sections */
+    .section-glow {
+      position: absolute; pointer-events: none;
+      border-radius: 50%; filter: blur(100px); opacity: 0.06;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- Grain overlay -->
+<div class="grain"></div>
+
+<!-- Three.js Background Canvas -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Mobile Nav -->
+<!--
+<div class="mobile-overlay" id="mobile-overlay"></div>
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-close" id="mobile-close">✕</button>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#burnout">Burnout Calc</a></li>
+
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#impact">Impact</a></li>
+  </ul>
+</nav>
+-->
+
+<!-- Navigation -->
+<nav id="main-nav">
+  <a href="#" class="nav-logo">
+    <div class="logo-orb"></div>
+    EVARA
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#burnout">Tools</a></li>
+
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#impact">Impact</a></li>
+  </ul>
+  <a href="#" class="btn-nav">Start Free</a>
+  <!--
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+  -->
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero" id="hero">
+  <div class="section-glow" style="width:600px;height:600px;background:var(--teal);top:-100px;right:-200px;"></div>
+  <div class="section-glow" style="width:400px;height:400px;background:var(--violet);bottom:-50px;left:-100px;"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      AI-Powered Mental Wellness for Exam Aspirants
+    </div>
+    <h1 class="hero-headline">
+      Every year, <span class="stat-word">20,000+</span><br />
+      students lose their lives<br />
+      to <em>exam pressure</em>
+    </h1>
+    <p class="hero-sub">
+      EVARA is the first mental wellness platform built exclusively for competitive exam students — combining AI check-ins, peer support, and licensed counseling into one safe, affordable space.
+    </p>
+    <div class="hero-cta">
+      <a href="#features" class="btn-primary">
+        <span>Explore EVARA</span>
+        <span>→</span>
+      </a>
+      <a href="#burnout" class="btn-secondary">Check Your Resilience Score</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number" data-count="10">0M+</span>
+        <span class="stat-label">Students in Need</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">₹99</span>
+        <span class="stat-label">Per Session</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">24hr</span>
+        <span class="stat-label">Counselor Access</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">8+</span>
+        <span class="stat-label">Regional Languages</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- PROBLEM SECTION -->
+<section class="problem-section" id="problem">
+  <div class="container">
+    <div class="problem-grid">
+      <div class="problem-visual reveal">
+        <div class="big-stat">20,000+</div>
+        <div class="big-stat-label">
+          exam-related student suicides are reported in India <strong>every single year</strong>. Yet mental health support remains either unaffordable, inaccessible, or deeply stigmatized in these communities.
+        </div>
+        <div style="margin-top: 32px; padding: 20px 24px; background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15); border-radius: 16px;">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+            Coaching institutes focus entirely on academic performance — <strong style="color: var(--text-primary);">completely ignoring psychological wellbeing.</strong> Students carry the weight of family expectations, financial pressure, and competitive anxiety with zero support.
+          </p>
+        </div>
+      </div>
+      <div class="problem-cards">
+        <div class="problem-card reveal reveal-delay-1">
+          <div class="problem-icon red">🔥</div>
+          <div>
+            <h4>Chronic Burnout</h4>
+            <p>12–18 hour study days, seven days a week, for years. No structure for mental recovery.</p>
+          </div>
+        </div>
+        <div class="problem-card reveal reveal-delay-2">
+          <div class="problem-icon amber">🏚️</div>
+          <div>
+            <h4>Isolation & Stigma</h4>
+            <p>Seeking help is seen as weakness. Students suffer in silence while peers appear to thrive.</p>
+          </div>
+        </div>
+        <div class="problem-card reveal reveal-delay-3">
+          <div class="problem-icon violet">💸</div>
+          <div>
+            <h4>Inaccessible Support</h4>
+            <p>Therapy costs ₹1,500–₹3,000 per session — unaffordable for most aspirant families.</p>
+          </div>
+        </div>
+        <div class="problem-card reveal reveal-delay-4">
+          <div class="problem-icon red">📉</div>
+          <div>
+            <h4>No Culturally Relevant Tools</h4>
+            <p>Global apps like Headspace aren't built for this context. No Hindi, no exam-specific support.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOOD SPHERE -->
+<section class="mood-section" id="mood">
+  <div class="container">
+    <div class="mood-center">
+      <span class="section-label reveal">AI Emotional Check-In</span>
+      <h2 class="section-title reveal">How are you feeling<br /><em>right now?</em></h2>
+      <p class="section-subtitle reveal" style="margin: 0 auto;">
+        Our AI detects early signs of burnout, anxiety, and depression — and responds with personalized micro-exercises in under 2 minutes.
+      </p>
+    </div>
+    <div class="mood-container">
+      <div class="mood-sphere-wrap reveal">
+        <div class="mood-sphere-ring"></div>
+        <div class="mood-sphere" id="mood-sphere"></div>
+      </div>
+      <div class="mood-labels">
+        <button class="mood-pill active" data-mood="calm" onclick="setMood(this)" style="border-color: rgba(45,212,191,0.4); color: var(--teal-glow);">😌 Calm</button>
+        <button class="mood-pill" data-mood="anxious" onclick="setMood(this)">😰 Anxious</button>
+        <button class="mood-pill" data-mood="burned" onclick="setMood(this)">🥵 Burned Out</button>
+        <button class="mood-pill" data-mood="focused" onclick="setMood(this)">🎯 Focused</button>
+        <button class="mood-pill" data-mood="sad" onclick="setMood(this)">😔 Low</button>
+        <button class="mood-pill" data-mood="motivated" onclick="setMood(this)">⚡ Motivated</button>
+      </div>
+      <div class="mood-message reveal" id="mood-message">
+        <span>Tap a mood above and I'll suggest a quick reset for you. 💙</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="container">
+    <span class="section-label reveal">Core Platform</span>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 24px; margin-bottom: 10px;">
+      <h2 class="section-title reveal" style="margin: 0;">Everything a student<br /><em>actually needs</em></h2>
+      <p class="section-subtitle reveal" style="max-width: 340px;">Five interconnected pillars, designed around how exam students actually think, feel, and break down.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon-wrap f-teal">🧠</div>
+        <h3>Daily Emotional Check-in</h3>
+        <p>A 2-minute conversational AI that detects early signs of burnout and anxiety, delivering personalized breathing exercises, journaling prompts, and grounding techniques.</p>
+        <span class="feature-tag tag-teal">AI Layer</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon-wrap f-violet">🤝</div>
+        <h3>Peer Support Circles</h3>
+        <p>Anonymous, moderated group chats for students facing similar pressures. Facilitated by trained peer counselors from the same exam background — you're never alone.</p>
+        <span class="feature-tag tag-violet">Community</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon-wrap f-amber">📞</div>
+        <h3>On-Demand Counseling</h3>
+        <p>Connect with licensed psychologists within 24 hours. Sessions from ₹99–₹199, available in Hindi, Tamil, Telugu, Bengali, and 4 more regional languages.</p>
+        <span class="feature-tag tag-amber">Affordable</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon-wrap f-teal">📅</div>
+        <h3>Burnout Prevention Toolkit</h3>
+        <p>Science-backed scheduling that integrates mental health breaks. Progress tracking rewards consistency over perfection with weekly resilience workshops.</p>
+        <span class="feature-tag tag-teal">Wellness</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon-wrap f-rose">📊</div>
+        <h3>Institute Dashboard</h3>
+        <p>Anonymized mental health data for coaching institutes. Early warning alerts for at-risk students help institutes position as student-first brands.</p>
+        <span class="feature-tag" style="background: rgba(244,63,94,0.12); color: #fda4af;">B2B</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon-wrap f-blue">🌍</div>
+        <h3>Regional Language AI</h3>
+        <p>The only wellness AI that speaks your mother tongue. Our NLP models are trained on culturally sensitive mental health content for Indian students.</p>
+        <span class="feature-tag" style="background: rgba(59,130,246,0.12); color: #93c5fd;">Inclusive</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BURNOUT CALCULATOR -->
+<section class="burnout-section" id="burnout">
+  <div class="container" style="text-align: center;">
+    <span class="section-label reveal">Wellness Tool</span>
+    <h2 class="section-title reveal">The <em>Burnout Calculator</em></h2>
+    <p class="section-subtitle reveal" style="margin: 0 auto 0;">Find out where you stand before it's too late.</p>
+    <div class="burnout-card reveal" style="text-align:left;">
+      <div class="calc-title">Resilience Score™</div>
+      <div class="calc-sub">Input your current study habits to calculate your personal Resilience Score. Science-backed and personalized to exam students.</div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">📚 Daily Study Hours</span>
+          <span class="slider-value" id="study-val">8 hrs</span>
+        </div>
+        <input type="range" id="study-hours" min="2" max="18" value="8" oninput="updateCalc()" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">😴 Hours of Sleep</span>
+          <span class="slider-value" id="sleep-val">7 hrs</span>
+        </div>
+        <input type="range" id="sleep-hours" min="3" max="10" value="7" oninput="updateCalc()" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">🏃 Breaks / Exercise (min/day)</span>
+          <span class="slider-value" id="breaks-val">30 min</span>
+        </div>
+        <input type="range" id="breaks" min="0" max="120" value="30" step="10" oninput="updateCalc()" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">🤝 Social Interaction (days/week)</span>
+          <span class="slider-value" id="social-val">3 days</span>
+        </div>
+        <input type="range" id="social" min="0" max="7" value="3" oninput="updateCalc()" />
+      </div>
+
+      <div class="score-display" id="score-display">
+        <div class="score-label">Your Resilience Score</div>
+        <div class="score-number" id="score-number" style="color: var(--teal-glow);">72</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar" id="score-bar" style="width: 72%; background: linear-gradient(90deg, var(--teal), var(--teal-glow));"></div>
+        </div>
+        <div class="score-text" id="score-text">
+          <strong style="color: var(--text-primary);">Holding Steady</strong> — You're managing, but watch out for creeping fatigue. Consider adding 10-minute mindfulness breaks between sessions.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="pricing-center">
+      <span class="section-label reveal">Transparent Pricing</span>
+      <h2 class="section-title reveal">Affordable for <em>every student</em></h2>
+      <p class="section-subtitle reveal" style="margin: 0 auto;">Mental health support that doesn't cost as much as your coaching fees.</p>
+      <div class="pricing-toggle reveal" style="display: flex;">
+        <button class="toggle-btn active" id="toggle-b2c" onclick="togglePricing('b2c')">Students</button>
+        <button class="toggle-btn" id="toggle-b2b" onclick="togglePricing('b2b')">Institutes</button>
+      </div>
+    </div>
+    <div class="pricing-grid" id="pricing-grid">
+      <!-- B2C Plans (default shown) -->
+      <div class="price-card reveal reveal-delay-1">
+        <div class="price-tier">Free</div>
+        <div class="price-name">Explorer</div>
+        <div class="price-amount"><span class="price-currency">₹</span>0</div>
+        <div class="price-period">Forever free</div>
+        <ul class="price-features">
+          <li>3 AI check-ins per week</li>
+          <li>Access to peer circles</li>
+          <li>Basic burnout calculator</li>
+          <li>Breathing exercises library</li>
+          <li class="muted">Unlimited AI sessions</li>
+          <li class="muted">Counselor access</li>
+          <li class="muted">Progress reports</li>
+        </ul>
+        <button class="btn-price btn-price-outline">Get Started Free</button>
+      </div>
+      <div class="price-card featured reveal reveal-delay-2">
+        <div class="price-badge">Most Popular</div>
+        <div class="price-tier">Student</div>
+        <div class="price-name">Resilient</div>
+        <div class="price-amount"><span class="price-currency">₹</span>199</div>
+        <div class="price-period">per month · less than ₹7/day</div>
+        <ul class="price-features">
+          <li>Unlimited AI check-ins</li>
+          <li>Moderated peer circles</li>
+          <li>Full burnout toolkit</li>
+          <li>1 counselor session at ₹99</li>
+          <li>Weekly resilience workshops</li>
+          <li>Progress & mood reports</li>
+          <li class="muted">Priority counselor matching</li>
+        </ul>
+        <button class="btn-price btn-price-filled">Start 7-Day Free Trial</button>
+      </div>
+      <div class="price-card reveal reveal-delay-3">
+        <div class="price-tier">Premium</div>
+        <div class="price-name">Thriver</div>
+        <div class="price-amount"><span class="price-currency">₹</span>399</div>
+        <div class="price-period">per month</div>
+        <ul class="price-features">
+          <li>Everything in Resilient</li>
+          <li>4 counselor sessions/month</li>
+          <li>Priority 2-hr counselor match</li>
+          <li>Personal wellness coach</li>
+          <li>Family awareness sessions</li>
+          <li>Exam-day crisis support line</li>
+          <li>AI study-wellness integration</li>
+        </ul>
+        <button class="btn-price btn-price-outline">Go Premium</button>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top: 24px; font-size: 0.78rem; color: var(--text-muted);">
+      All prices subsidized through institute partnerships. Government grant programs available. Sessions available in 8+ regional languages.
+    </p>
+  </div>
+</section>
+
+<!-- INSTITUTE DASHBOARD -->
+<section class="dashboard-section" id="dashboard">
+  <div class="container">
+    <div class="dashboard-grid">
+      <div>
+        <span class="section-label reveal">B2B Platform</span>
+        <h2 class="section-title reveal">The <em>Institute Dashboard</em></h2>
+        <p class="section-subtitle reveal" style="margin-bottom: 40px;">Help your institute become student-first. Get real insights, protect your students, and differentiate your brand in a crowded coaching market.</p>
+        <div class="dashboard-points">
+          <div class="dash-point reveal reveal-delay-1">
+            <div class="dash-point-icon">📈</div>
+            <div>
+              <h4>Cohort Mental Health Index</h4>
+              <p>Anonymized, aggregate wellness data across your student batch. See trends before they become crises.</p>
+            </div>
+          </div>
+          <div class="dash-point reveal reveal-delay-2">
+            <div class="dash-point-icon">🚨</div>
+            <div>
+              <h4>Early Warning Alerts</h4>
+              <p>AI-powered flags for at-risk students. Intervene early, reduce dropout rates, and protect lives.</p>
+            </div>
+          </div>
+          <div class="dash-point reveal reveal-delay-3">
+            <div class="dash-point-icon">🏆</div>
+            <div>
+              <h4>Student-First Brand Positioning</h4>
+              <p>Institutes using EVARA see 30% better retention. Market your institute as one that truly cares.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-preview reveal">
+        <div class="dash-header">
+          <div class="dash-dots">
+            <div class="dash-dot" style="background:#ff5f56;"></div>
+            <div class="dash-dot" style="background:#febc2e;"></div>
+            <div class="dash-dot" style="background:#27c840;"></div>
+          </div>
+          <span class="dash-title">EVARA Institute Portal</span>
+        </div>
+        <div class="dash-metrics">
+          <div class="dash-metric">
+            <div class="dash-metric-label">Wellness Index</div>
+            <div class="dash-metric-value" style="color: var(--teal-glow);">74%</div>
+            <div class="dash-metric-change change-up">↑ 8% this week</div>
+          </div>
+          <div class="dash-metric">
+            <div class="dash-metric-label">At-Risk Students</div>
+            <div class="dash-metric-value" style="color: var(--rose);">12</div>
+            <div class="dash-metric-change change-down">↑ 3 new flags</div>
+          </div>
+          <div class="dash-metric">
+            <div class="dash-metric-label">Check-ins Today</div>
+            <div class="dash-metric-value" style="color: var(--amber-light);">438</div>
+            <div class="dash-metric-change change-up">↑ 22% vs avg</div>
+          </div>
+          <div class="dash-metric">
+            <div class="dash-metric-label">Sessions Booked</div>
+            <div class="dash-metric-value" style="color: #a78bfa;">67</div>
+            <div class="dash-metric-change change-up">↑ This month</div>
+          </div>
+        </div>
+        <div class="dash-chart">
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase;">7-Day Wellness Trend</div>
+          <div class="dash-bars">
+            <div class="dash-bar" style="height: 55%;"></div>
+            <div class="dash-bar" style="height: 60%;"></div>
+            <div class="dash-bar" style="height: 48%;"></div>
+            <div class="dash-bar" style="height: 72%;"></div>
+            <div class="dash-bar" style="height: 68%;"></div>
+            <div class="dash-bar" style="height: 80%;"></div>
+            <div class="dash-bar" style="height: 90%; opacity: 1;"></div>
+          </div>
+        </div>
+        <div class="alert-row">
+          <div class="alert-dot"></div>
+          <div class="alert-text">3 students flagged for high burnout risk this week — recommend immediate peer circle check-in or counselor referral.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="impact-section" id="impact">
+  <div class="container">
+    <div style="text-align: center;">
+      <span class="section-label reveal">Global Impact</span>
+      <h2 class="section-title reveal">Built to <em>move the needle</em><br />on a public health crisis</h2>
+      <p class="section-subtitle reveal" style="margin: 0 auto;">EVARA isn't just a product. It's a movement to make mental health a fundamental pillar of education.</p>
+    </div>
+    <div class="impact-grid" style="margin-top: 60px;">
+      <div class="impact-card reveal reveal-delay-1">
+        <div class="impact-number">10M+</div>
+        <div class="impact-label">Competitive exam students in India alone — our immediate addressable market</div>
+      </div>
+      <div class="impact-card reveal reveal-delay-2">
+        <div class="impact-number">↓42%</div>
+        <div class="impact-label">Reduction in reported burnout symptoms among EVARA pilot users</div>
+      </div>
+      <div class="impact-card reveal reveal-delay-3">
+        <div class="impact-number">₹99</div>
+        <div class="impact-label">Cost of a counselor session — 15× cheaper than market rate, subsidized by B2B</div>
+      </div>
+      <div class="impact-card reveal reveal-delay-4">
+        <div class="impact-number">3 SDGs</div>
+        <div class="impact-label">Aligned with SDG 3 (Health), SDG 4 (Education), SDG 10 (Reduced Inequalities)</div>
+      </div>
+    </div>
+    <div class="sdg-badges">
+      <span class="sdg-badge sdg-1">✦ SDG 3 — Good Health & Wellbeing</span>
+      <span class="sdg-badge sdg-2">✦ SDG 4 — Quality Education</span>
+      <span class="sdg-badge sdg-3">✦ SDG 10 — Reduced Inequalities</span>
+    </div>
+    <div style="margin-top: 48px; text-align: center; padding: 32px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px; backdrop-filter: blur(10px);" class="reveal">
+      <div style="font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px;">Revenue Model</div>
+      <div style="display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;">
+        <div style="text-align: center;">
+          <div style="font-size: 1.4rem; font-weight: 600; color: var(--teal-glow);">B2B</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">Institute Subscriptions</div>
+        </div>
+        <div style="color: var(--glass-border); align-self: center;">·</div>
+        <div style="text-align: center;">
+          <div style="font-size: 1.4rem; font-weight: 600; color: var(--amber-light);">Freemium</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">Student Upgrades</div>
+        </div>
+        <div style="color: var(--glass-border); align-self: center;">·</div>
+        <div style="text-align: center;">
+          <div style="font-size: 1.4rem; font-weight: 600; color: #a78bfa;">Marketplace</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">Counselor Commission</div>
+        </div>
+        <div style="color: var(--glass-border); align-self: center;">·</div>
+        <div style="text-align: center;">
+          <div style="font-size: 1.4rem; font-weight: 600; color: #93c5fd;">Grants</div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary);">Government & NGO</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="final">
+  <div class="container">
+    <div class="section-divider"></div>
+    <p class="final-cta-quote reveal">
+      "We don't just want students to crack their exams. We want them to <strong>survive the journey</strong> — and thrive beyond it. EVARA is not just a wellness app. <strong>It's a movement.</strong>"
+    </p>
+    <div class="hero-cta reveal">
+      <a href="#" class="btn-primary">
+        <span>Join EVARA Today</span>
+        <span>→</span>
+      </a>
+      <a href="#dashboard" class="btn-secondary">Partner With Us</a>
+    </div>
+    <div style="margin-top: 48px; display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;" class="reveal">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
+        <span style="color: var(--teal-glow);">✓</span> No credit card required
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
+        <span style="color: var(--teal-glow);">✓</span> 7-day free trial
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
+        <span style="color: var(--teal-glow);">✓</span> Cancel anytime
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
+        <span style="color: var(--teal-glow);">✓</span> HIPAA-compliant
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <span style="color: var(--teal-glow);">EVA</span>RA
+  </div>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Careers</a>
+    <a href="#">Contact</a>
+    <a href="#">Press Kit</a>
+    <a href="#">License</a>
+  </div>
+  <div class="footer-right">
+    © 2026 EVARA Technologies Pvt. Ltd.
+  </div>
+</footer>
+
+<script>
+// ===================== THREE.JS PARTICLE FIELD =====================
+const canvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 5;
+
+// Particles
+const particleCount = window.innerWidth < 768 ? 600 : 1200;
+const positions = new Float32Array(particleCount * 3);
+const colors = new Float32Array(particleCount * 3);
+const sizes = new Float32Array(particleCount);
+const basePositions = new Float32Array(particleCount * 3);
+
+for (let i = 0; i < particleCount; i++) {
+  const x = (Math.random() - 0.5) * 20;
+  const y = (Math.random() - 0.5) * 20;
+  const z = (Math.random() - 0.5) * 10;
+  positions[i*3] = x; positions[i*3+1] = y; positions[i*3+2] = z;
+  basePositions[i*3] = x; basePositions[i*3+1] = y; basePositions[i*3+2] = z;
+
+  const t = Math.random();
+  if (t < 0.5) {
+    colors[i*3] = 0.05; colors[i*3+1] = 0.58; colors[i*3+2] = 0.53;
+  } else if (t < 0.8) {
+    colors[i*3] = 0.55; colors[i*3+1] = 0.36; colors[i*3+2] = 0.98;
+  } else {
+    colors[i*3] = 0.96; colors[i*3+1] = 0.62; colors[i*3+2] = 0.04;
+  }
+  sizes[i] = Math.random() * 2.5 + 0.5;
+}
+
+const geo = new THREE.BufferGeometry();
+geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+const mat = new THREE.PointsMaterial({
+  size: 0.03, vertexColors: true, transparent: true,
+  opacity: 0.6, sizeAttenuation: true, blending: THREE.AdditiveBlending
+});
+
+const particles = new THREE.Points(geo, mat);
+scene.add(particles);
+
+let mouseX = 0, mouseY = 0;
+let targetX = 0, targetY = 0;
+let scrollY = 0;
+
+document.addEventListener('mousemove', (e) => {
+  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+window.addEventListener('scroll', () => {
+  scrollY = window.scrollY;
+});
+
+const clock = new THREE.Clock();
+function animateThree() {
+  requestAnimationFrame(animateThree);
+  const t = clock.getElapsedTime();
+
+  targetX += (mouseX * 0.3 - targetX) * 0.02;
+  targetY += (mouseY * 0.3 - targetY) * 0.02;
+
+  particles.rotation.y = targetX * 0.15 + t * 0.015;
+  particles.rotation.x = targetY * 0.1 + t * 0.008;
+  particles.position.y = -scrollY * 0.002;
+
+  const pos = geo.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    pos[i*3+1] = basePositions[i*3+1] + Math.sin(t * 0.3 + i * 0.05) * 0.02;
+  }
+  geo.attributes.position.needsUpdate = true;
+  renderer.render(scene, camera);
+}
+animateThree();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ===================== CUSTOM CURSOR =====================
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let cx = 0, cy = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', (e) => {
+  cx = e.clientX; cy = e.clientY;
+  cursor.style.left = cx + 'px';
+  cursor.style.top = cy + 'px';
+});
+
+function animateCursor() {
+  rx += (cx - rx) * 0.12;
+  ry += (cy - ry) * 0.12;
+  cursorRing.style.left = rx + 'px';
+  cursorRing.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+document.querySelectorAll('a, button, .mood-pill, .peer-card, .feature-card').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '20px'; cursor.style.height = '20px';
+    cursor.style.background = 'rgba(45,212,191,0.8)';
+    cursorRing.style.width = '60px'; cursorRing.style.height = '60px';
+    cursorRing.style.borderColor = 'rgba(45,212,191,0.6)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '12px'; cursor.style.height = '12px';
+    cursor.style.background = 'var(--teal-glow)';
+    cursorRing.style.width = '40px'; cursorRing.style.height = '40px';
+    cursorRing.style.borderColor = 'rgba(45,212,191,0.4)';
+  });
+});
+
+// ===================== MOOD SPHERE =====================
+const moodData = {
+  calm: {
+    color1: '#2dd4bf', color2: '#0d9488', shadow: 'rgba(45,212,191,0.5)',
+    msg: '<strong>You\'re in a good space! 🌊</strong> Perfect time for deep study. Try our 25-minute focus blocks with 5-minute mindfulness breaks in between.',
+    pillStyle: 'border-color: rgba(45,212,191,0.5); color: #2dd4bf; background: rgba(45,212,191,0.1);'
+  },
+  anxious: {
+    color1: '#f59e0b', color2: '#d97706', shadow: 'rgba(245,158,11,0.5)',
+    msg: '<strong>Anxiety is a signal, not a sentence. 💛</strong> Take 5 deep breaths right now — in for 4 counts, hold for 4, out for 6. Your nervous system will thank you.',
+    pillStyle: 'border-color: rgba(245,158,11,0.5); color: #fbbf24; background: rgba(245,158,11,0.1);'
+  },
+  burned: {
+    color1: '#f43f5e', color2: '#be123c', shadow: 'rgba(244,63,94,0.5)',
+    msg: '<strong>Your brain is asking for rest. 🔴</strong> Burnout isn\'t failure — it\'s a biological limit. Stop studying now. Do 10 minutes of gentle walking and drink water.',
+    pillStyle: 'border-color: rgba(244,63,94,0.5); color: #f43f5e; background: rgba(244,63,94,0.1);'
+  },
+  focused: {
+    color1: '#818cf8', color2: '#4f46e5', shadow: 'rgba(129,140,248,0.5)',
+    msg: '<strong>Flow state activated! 💜</strong> You\'re primed for complex problem-solving. Tackle your hardest subject right now. Set a 45-minute deep work timer.',
+    pillStyle: 'border-color: rgba(129,140,248,0.5); color: #818cf8; background: rgba(129,140,248,0.1);'
+  },
+  sad: {
+    color1: '#60a5fa', color2: '#2563eb', shadow: 'rgba(96,165,250,0.5)',
+    msg: '<strong>It\'s okay not to be okay. 💙</strong> You don\'t have to push through sadness alone. Consider reaching out to a peer circle or booking a ₹99 counselor session today.',
+    pillStyle: 'border-color: rgba(96,165,250,0.5); color: #60a5fa; background: rgba(96,165,250,0.1);'
+  },
+  motivated: {
+    color1: '#4ade80', color2: '#16a34a', shadow: 'rgba(74,222,128,0.5)',
+    msg: '<strong>Channel this energy! ⚡</strong> Set 3 specific goals for today\'s session. Motivation is fleeting — turn it into a system: schedule your next 3 study blocks now.',
+    pillStyle: 'border-color: rgba(74,222,128,0.5); color: #4ade80; background: rgba(74,222,128,0.1);'
+  }
+};
+
+function setMood(el) {
+  document.querySelectorAll('.mood-pill').forEach(p => {
+    p.classList.remove('active');
+    p.style.cssText = '';
+  });
+  el.classList.add('active');
+  const mood = el.dataset.mood;
+  const data = moodData[mood];
+  el.style.cssText = data.pillStyle;
+
+  const sphere = document.getElementById('mood-sphere');
+  sphere.style.background = `radial-gradient(circle at 35% 35%, ${data.color1}, ${data.color2} 40%, rgba(10,15,30,0.8))`;
+  sphere.style.boxShadow = `0 0 40px ${data.shadow}, 0 0 80px ${data.shadow.replace('0.5','0.2')}, inset 0 0 40px ${data.shadow.replace('0.5','0.1')}`;
+
+  const msg = document.getElementById('mood-message');
+  msg.style.opacity = '0'; msg.style.transform = 'translateY(10px)';
+  setTimeout(() => {
+    msg.innerHTML = `<span>${data.msg}</span>`;
+    msg.style.transition = 'all 0.4s ease';
+    msg.style.opacity = '1'; msg.style.transform = 'translateY(0)';
+  }, 200);
+}
+
+// ===================== BURNOUT CALCULATOR =====================
+function updateCalc() {
+  const study = parseInt(document.getElementById('study-hours').value);
+  const sleep = parseInt(document.getElementById('sleep-hours').value);
+  const breaks = parseInt(document.getElementById('breaks').value);
+  const social = parseInt(document.getElementById('social').value);
+
+  document.getElementById('study-val').textContent = study + ' hrs';
+  document.getElementById('sleep-val').textContent = sleep + ' hrs';
+  document.getElementById('breaks-val').textContent = breaks + ' min';
+  document.getElementById('social-val').textContent = social + ' days';
+
+  // Score algorithm (0-100, higher = more resilient)
+  let score = 100;
+  // Study penalty
+  if (study > 14) score -= 35;
+  else if (study > 12) score -= 25;
+  else if (study > 10) score -= 15;
+  else if (study > 8) score -= 5;
+  else if (study < 4) score -= 10;
+
+  // Sleep bonus/penalty
+  if (sleep >= 7) score += 10;
+  else if (sleep >= 6) score += 0;
+  else if (sleep < 5) score -= 30;
+  else score -= 15;
+
+  // Breaks bonus
+  score += Math.min(breaks / 120 * 20, 20);
+
+  // Social bonus
+  score += Math.min(social / 7 * 15, 15);
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  const numEl = document.getElementById('score-number');
+  const barEl = document.getElementById('score-bar');
+  const textEl = document.getElementById('score-text');
+  const displayEl = document.getElementById('score-display');
+
+  // Animate number
+  const current = parseInt(numEl.textContent) || 0;
+  let start = current;
+  const duration = 600;
+  const startTime = performance.now();
+  function animNum(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    numEl.textContent = Math.round(start + (score - start) * eased);
+    if (progress < 1) requestAnimationFrame(animNum);
+  }
+  requestAnimationFrame(animNum);
+
+  barEl.style.width = score + '%';
+
+  if (score >= 75) {
+    numEl.style.color = '#4ade80';
+    barEl.style.background = 'linear-gradient(90deg, #16a34a, #4ade80)';
+    displayEl.style.background = 'linear-gradient(135deg, rgba(74,222,128,0.08), rgba(22,163,74,0.03))';
+    displayEl.style.borderColor = 'rgba(74,222,128,0.2)';
+    textEl.innerHTML = '<strong style="color:#4ade80;">Resilient & Thriving!</strong> Your habits are well-balanced. Keep your current routine — and consider coaching a peer through EVARA circles.';
+  } else if (score >= 50) {
+    numEl.style.color = 'var(--teal-glow)';
+    barEl.style.background = 'linear-gradient(90deg, var(--teal), var(--teal-glow))';
+    displayEl.style.background = 'linear-gradient(135deg, rgba(13,148,136,0.1), rgba(45,212,191,0.04))';
+    displayEl.style.borderColor = 'rgba(13,148,136,0.2)';
+    textEl.innerHTML = '<strong style="color:var(--teal-glow);">Holding Steady</strong> — Managing, but watch for creeping fatigue. Add 10-minute mindfulness breaks and try to protect weekend sleep.';
+  } else if (score >= 25) {
+    numEl.style.color = 'var(--amber-light)';
+    barEl.style.background = 'linear-gradient(90deg, var(--amber), var(--amber-light))';
+    displayEl.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.03))';
+    displayEl.style.borderColor = 'rgba(245,158,11,0.25)';
+    textEl.innerHTML = '<strong style="color:var(--amber-light);">Burnout Warning ⚠️</strong> You\'re running on fumes. Sleep deprivation is sabotaging your learning. Rest is not a reward — it\'s a requirement.';
+  } else {
+    numEl.style.color = 'var(--rose)';
+    barEl.style.background = 'linear-gradient(90deg, #be123c, var(--rose))';
+    displayEl.style.background = 'linear-gradient(135deg, rgba(244,63,94,0.1), rgba(244,63,94,0.03))';
+    displayEl.style.borderColor = 'rgba(244,63,94,0.25)';
+    textEl.innerHTML = '<strong style="color:var(--rose);">Critical Burnout Risk 🚨</strong> Please stop and talk to someone today. Book a ₹99 session on EVARA. Your exam can wait — your health cannot.';
+  }
+}
+updateCalc();
+
+// ===================== PRICING TOGGLE =====================
+const b2cPrices = [
+  { tier: 'Free', name: 'Explorer', amount: '0', period: 'Forever free', featured: false,
+    features: ['3 AI check-ins per week', 'Access to peer circles', 'Basic burnout calculator', 'Breathing exercises library'],
+    muted: ['Unlimited AI sessions', 'Counselor access', 'Progress reports'], btn: 'Get Started Free', style: 'outline' },
+  { tier: 'Student', name: 'Resilient', amount: '199', period: 'per month · less than ₹7/day', featured: true,
+    features: ['Unlimited AI check-ins', 'Moderated peer circles', 'Full burnout toolkit', '1 counselor session at ₹99', 'Weekly resilience workshops', 'Progress & mood reports'],
+    muted: ['Priority counselor matching'], btn: 'Start 7-Day Free Trial', style: 'filled' },
+  { tier: 'Premium', name: 'Thriver', amount: '399', period: 'per month',  featured: false,
+    features: ['Everything in Resilient', '4 counselor sessions/month', 'Priority 2-hr counselor match', 'Personal wellness coach', 'Family awareness sessions', 'Exam-day crisis support line', 'AI study-wellness integration'],
+    muted: [], btn: 'Go Premium', style: 'outline' }
+];
+const b2bPrices = [
+  { tier: 'Institute', name: 'Starter', amount: '4,999', period: 'per month · up to 200 students', featured: false,
+    features: ['Cohort wellness dashboard', 'Anonymized data insights', 'Basic early warning alerts', '3 counselor sessions/student', 'Monthly wellness report'],
+    muted: ['Custom branding', 'Dedicated account manager'], btn: 'Book a Demo', style: 'outline' },
+  { tier: 'Institute', name: 'Growth', amount: '12,999', period: 'per month · up to 600 students', featured: true,
+    features: ['Everything in Starter', 'Real-time at-risk alerts', 'Unlimited counselor sessions', 'Custom branded student app', 'Bi-weekly data briefing', 'Parent awareness workshops'],
+    muted: ['White-label deployment'], btn: 'Contact Sales', style: 'filled' },
+  { tier: 'Enterprise', name: 'Scale', amount: 'Custom', period: 'tailored per institution',  featured: false,
+    features: ['Full white-label deployment', 'Custom AI training on cohort', 'Government compliance ready', 'Dedicated account team', 'API access & LMS integration', 'Multi-campus support', 'Grant application assistance'],
+    muted: [], btn: 'Talk to Founders', style: 'outline' }
+];
+
+function togglePricing(type) {
+  document.getElementById('toggle-b2c').classList.toggle('active', type === 'b2c');
+  document.getElementById('toggle-b2b').classList.toggle('active', type === 'b2b');
+  const prices = type === 'b2c' ? b2cPrices : b2bPrices;
+  const grid = document.getElementById('pricing-grid');
+  grid.style.opacity = '0'; grid.style.transform = 'translateY(10px)';
+  setTimeout(() => {
+    grid.innerHTML = prices.map((p, i) => `
+      <div class="price-card ${p.featured ? 'featured' : ''}" style="opacity:1; transform:none;">
+        ${p.featured ? '<div class="price-badge">Most Popular</div>' : ''}
+        <div class="price-tier">${p.tier}</div>
+        <div class="price-name">${p.name}</div>
+        <div class="price-amount"><span class="price-currency">₹</span>${p.amount}</div>
+        <div class="price-period">${p.period}</div>
+        <ul class="price-features">
+          ${p.features.map(f => `<li>${f}</li>`).join('')}
+          ${p.muted.map(f => `<li class="muted">${f}</li>`).join('')}
+        </ul>
+        <button class="btn-price btn-price-${p.style}">${p.btn}</button>
+      </div>
+    `).join('');
+    grid.style.transition = 'all 0.4s ease';
+    grid.style.opacity = '1'; grid.style.transform = 'translateY(0)';
+  }, 200);
+}
+
+// ===================== SCROLL REVEAL =====================
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// Stagger feature cards
+const staggeredCards = document.querySelectorAll('.feature-card, .price-card, .impact-card, .problem-card');
+const cardObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }, (parseInt(entry.target.dataset.delay) || 0) * 100);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.feature-card').forEach((el, i) => {
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  el.dataset.delay = i;
+  cardObserver.observe(el);
+});
+document.querySelectorAll('.impact-card').forEach((el, i) => {
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  el.dataset.delay = i;
+  cardObserver.observe(el);
+});
+
+// ===================== NAV SCROLL EFFECT =====================
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('main-nav');
+  if (window.scrollY > 50) {
+    nav.style.background = 'rgba(10,15,30,0.92)';
+    nav.style.borderBottomColor = 'rgba(255,255,255,0.06)';
+  } else {
+    nav.style.background = 'rgba(10,15,30,0.6)';
+  }
+});
+
+// ===================== MOBILE NAV =====================
+const hamburger = document.getElementById('hamburger');
+const mobileNav = document.getElementById('mobile-nav');
+const mobileOverlay = document.getElementById('mobile-overlay');
+const mobileClose = document.getElementById('mobile-close');
+
+function openNav() {
+  mobileNav.classList.add('open');
+  mobileOverlay.classList.add('show');
+  // Prevent body scroll
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNav() {
+  mobileNav.classList.remove('open');
+  mobileOverlay.classList.remove('show');
+  // Restore body scroll
+  document.body.style.overflow = '';
+}
+
+if (hamburger) hamburger.addEventListener('click', openNav);
+if (mobileClose) mobileClose.addEventListener('click', closeNav);
+if (mobileOverlay) mobileOverlay.addEventListener('click', closeNav);
+
+document.querySelectorAll('.mobile-nav a').forEach(a => a.addEventListener('click', closeNav));
+
+// ===================== PARALLAX PROBLEM STAT =====================
+window.addEventListener('scroll', () => {
+  const stat = document.querySelector('.big-stat');
+  if (stat) {
+    const rect = stat.getBoundingClientRect();
+    const parallax = rect.top * 0.05;
+    stat.style.transform = `translateY(${parallax}px)`;
+  }
+});
+
+// ===================== GSAP HERO =====================
+if (typeof gsap !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.from('.hero-headline .stat-word', {
+    scale: 0.8, opacity: 0, duration: 0.8, delay: 0.5,
+    ease: 'back.out(1.7)'
+  });
+
+  gsap.to('.problem-section', {
+    scrollTrigger: { trigger: '.problem-section', start: 'top 80%', end: 'bottom 20%', scrub: 0.5 },
+    backgroundImage: 'linear-gradient(180deg, rgba(10,5,20,0.95) 0%, rgba(20,5,25,0.98) 100%)'
+  });
+}
+</script>
+</body>
+</html>
